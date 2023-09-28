@@ -25,6 +25,7 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.TimeTruncator;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterableGenerator;
@@ -38,6 +39,7 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftLogsDumpFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftMetadataDumpFormat;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
@@ -177,7 +179,10 @@ public class RedshiftLogsConnector extends AbstractRedshiftConnector
               startField, arguments.getQueryLogEarliestTimestamp()));
 
     ZonedIntervalIterable intervals =
-        ZonedIntervalIterableGenerator.forConnectorArguments(arguments);
+        ZonedIntervalIterableGenerator.forConnectorArguments(
+            arguments,
+            arguments.getQueryLogRotationFrequency(),
+            TimeTruncator.createBasedOnChronoUnit(ChronoUnit.HOURS));
 
     LOG.info("Exporting query log for " + intervals);
     for (ZonedInterval interval : intervals) {
